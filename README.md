@@ -19,7 +19,8 @@ Within your data directory, you need the following files:
 The file, wellCodes.csv, matches the imaging name to the sample. It is critical that wellCodes.csv accurately reflects which image belongs to which sample. Double check that this is accurate while imaging.
 
 wellCodes.csv file example
-```imageNumber,well
+```
+imageNumber,well
 1,A6
 2,A5
 3,A4
@@ -51,7 +52,8 @@ In the above example, imaging occured as a snake, accounting for the count down 
 The file, markers.csv, will encode which cycle is which marker using the "marker_name" column. For this reason, every marker_name needs to be unique.
 
 markers.csv file example
-```channel_number,cycle_number,marker_name,filter,excitation wavelength,emission wavelength
+```
+channel_number,cycle_number,marker_name,filter,excitation wavelength,emission wavelength
 1,1,DNA_1,DNA_1,353,465
 2,1,A488_background,AF488,493,517
 3,1,A647_background,Cy5,650,673
@@ -67,7 +69,8 @@ markers.csv file example
 13,4,AlphaSMA,AF568,577,603
 14,4,CD31,Cy5,650,673
 15,5,DNA_5,DNA_5,353,465
-16,5,HCS,AF488,493,517```
+16,5,HCS,AF488,493,517
+```
 
 Also avoid spaces or special characters in the marker_name column. 
 
@@ -85,8 +88,10 @@ The following will just need to be set up before the first use:
   * Upon downloading, move bfmatlab to your Documents > MATLAB folder. Create a new MATLAB folder there if it doesn't exist
   * Within MATLAB command line, need to add bfmatlab to your path:
   
-    ```addpath('/path/to/bfmatlab')
-    savepath```
+    ```
+    addpath('/path/to/bfmatlab')
+    savepath
+    ```
     
 * ensure registrationCyCIF is also added to the MATLAB path and within Documents > MATLAB
 * In MATLAB, Install Image Processing Toolbox Add-Ons. From HOME window in MATLAB, click "Add-ons"
