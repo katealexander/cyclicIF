@@ -8,9 +8,9 @@
 %% User input or changable variables
 dataDir = pwd;
 %well = 'C1';
-xPixels = 5300; % images will be cropped to this # of pixels
-yPixels = 5280;
-outDir = strcat(dataDir,"/",well,'registration/'); 
+xPixels = 5200; % images will be cropped to this # of pixels
+yPixels = 5200;
+outDir = strcat(dataDir,"/",well,'registration/');
 disp(outDir)
 if ~exist(outDir, 'dir')
     mkdir(outDir);
@@ -20,6 +20,7 @@ end
 markers = readtable(strcat(dataDir,'/markers.csv'), "ReadVariableNames",true, "VariableNamingRule","preserve");
 
 %% Load the image data, process the registration, and save each channel to the "registration" folder
+%% Load the image data
 files = dir(strcat(dataDir,"/",well,'raw/*.czi'));
 outTable = strings(length(files), 2); % this will contain the peakCorr values from imregcorr, an indication of the registration success
 for i = 1:length(files)
