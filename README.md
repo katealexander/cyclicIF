@@ -105,4 +105,4 @@ From the command line, the following will loop through each well directory to ru
 
 ```for dir in */; do ./runRegistration.sh $dir; done```
 
-The above script will create a new directory in each well directory, called "registration". 
+The above script will create a new directory in each well directory, called "registration". It will save the registered images to the registration directory with new names according the the markers file. It will also output registrationStats.csv. In our initial tests, we noted that when the DNA staining quality was poor, with low signal to noise, the peak correlation statistic was lower; however, the images were still accurately aligned. 
