@@ -93,9 +93,10 @@ The following will just need to be set up before the first use:
     savepath
     ```
     
-* ensure registrationCyCIF is also added to the MATLAB path and within Documents > MATLAB
+* ensure cyclicIF is also added to the MATLAB path and within Documents > MATLAB
 * In MATLAB, Install Image Processing Toolbox Add-Ons. From HOME window in MATLAB, click "Add-ons"
 * In "runRegistration.sh", you will need to make sure that the path to MATLAB is correct
+  
 
 ## Runing the Registration
 In terminal, navigate to the directory that has all of the sample directories. This directory should have each of the wells as a directory, with image ".czi" files stored in well/raw. This directory should also have the "markers.csv" file.
