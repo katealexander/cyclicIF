@@ -19,7 +19,7 @@ end
 %% Load markers file
 markers = readtable(strcat(dataDir,'/markers.csv'), "ReadVariableNames",true, "VariableNamingRule","preserve");
 
-%% Load the image data
+%% Load the image data, process the registration, and save each channel to the "registration" folder
 files = dir(strcat(dataDir,"/",well,'raw/*.czi'));
 outTable = strings(length(files), 2); % this will contain the peakCorr values from imregcorr, an indication of the registration success
 for i = 1:length(files)
