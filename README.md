@@ -2,20 +2,20 @@
 This provides instructions for image processing of CyCIF data generated in the Alexander Lab.
 It uses some of the organization/structure as inspired by [McMICRO](https://mcmicro.org/), developed by the Sorger Lab.
 
-#Imaging
+# Imaging
 We generally image at 20x with the focal plane determined by DNA Hoesht signal using Software Autofocus.
 Tiles should overlap at least 10%.
 
-#Stitching
+# Stitching
 Perform stitching within the Zeiss microscopy software.
 
-#Needed files
+# Needed files
 Within your data directory, you need the following files:
 1. Imaging files: Based on how we name our files, we have "Round[cycleNumber]", "(imageNumber)", and ".csv" present in each file name. If they are named differently, the sortingAndRenaming step below will need to be modified. If they are not ".csv" files, the MATLAB script "register.m" will need to be modified.
 2. wellCodes.csv
 3. markers.csv
 
-#Well codes file
+# Well codes file
 The file, wellCodes.csv, matches the imaging name to the sample. It is critical that wellCodes.csv accurately reflects which image belongs to which sample. Double check that this is accurate while imaging.
 
 wellCodes.csv file example
@@ -48,7 +48,7 @@ imageNumber,well
 ```
 In the above example, imaging occured as a snake, accounting for the count down then count up of wells matching the imaging number. The imaging number in wellCodes.csv should match the number present in the image file name.
 
-#Markers file
+# Markers file
 The file, markers.csv, will encode which cycle is which marker using the "marker_name" column. For this reason, every marker_name needs to be unique.
 
 markers.csv file example
@@ -74,14 +74,14 @@ channel_number,cycle_number,marker_name,filter,excitation wavelength,emission wa
 
 Also avoid spaces or special characters in the marker_name column. 
 
-#Rename and sort imaging files
+# Rename and sort imaging files
 The following python script sorts and renames the imaging files so that each imaging sample gets its own directory, with simplified file names according to imaging cycle. Note that the Python script may need to be amended depending on the number of rounds (adding or subtracting if statments within for loop)
 
 ```python3 sortAndRename.py wellCodes.csv```
 
 
-#Registration
-##Before running registration
+# Registration
+## Before running registration
 The following will just need to be set up before the first use:
 * MATLAB 2024b was used. If downloading for Mac, make sure that the Downloaded version matches your processor (Intel vs Silicon; About This Mac > Chip tells you this info). For CSHL, intranet search for "software" gets you to the link for the CSHL MATLAB liscence.
 * Download [bfmatlab](https://www.openmicroscopy.org/bio-formats/downloads/) 
@@ -97,7 +97,7 @@ The following will just need to be set up before the first use:
 * In MATLAB, Install Image Processing Toolbox Add-Ons. From HOME window in MATLAB, click "Add-ons"
 * In "runRegistration.sh", you will need to make sure that the path to MATLAB is correct
 
-##Runing the Registration
+## Runing the Registration
 In terminal, navigate to the directory that has all of the sample directories. This directory should have each of the wells as a directory, with image ".czi" files stored in well/raw. This directory should also have the "markers.csv" file.
 
 From the command line, the following will loop through each well directory to run the registration.
