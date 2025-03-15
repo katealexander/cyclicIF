@@ -102,6 +102,7 @@ The following will just need to be set up before the first use:
 In terminal, navigate to the directory that has all of the sample directories. This directory should have each of the wells as a directory, with image ".czi" files stored in well/raw. This directory should also have the "markers.csv" file.
 
 From the command line, the following will loop through each well directory to run the registration.
+
 ```for dir in */; do ./runRegistration.sh $dir; done```
 
 The above script will create a new directory in each well directory, called "registration". 
