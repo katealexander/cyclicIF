@@ -11,7 +11,7 @@ Perform stitching within the Zeiss microscopy software.
 
 # Needed files
 Within your data directory, you need the following files:
-1. Imaging files: Based on how we name our files, we have "Round[cycleNumber]", "(imageNumber)", and ".csv" present in each file name. If they are named differently, the sortingAndRenaming step below will need to be modified. If they are not ".csv" files, the MATLAB script "register.m" will need to be modified.
+1. Imaging files: Based on how we name our files, we have "Round[cycleNumber]", "(imageNumber)", and ".czi" present in each file name. If they are named differently, the sortingAndRenaming step below will need to be modified. If they are not ".czi" files, the MATLAB script "register.m" will need to be modified.
 2. wellCodes.csv
 3. markers.csv
 
