@@ -8,7 +8,7 @@
 %% User input or changable variables
 dataDir = pwd;
 %well = 'C1';
-xPixels = 5315; % images will be cropped to this # of pixels
+xPixels = 5300; % images will be cropped to this # of pixels
 yPixels = 5280;
 outDir = strcat(dataDir,"/",well,'registration/'); 
 disp(outDir)
