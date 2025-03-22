@@ -1,5 +1,5 @@
 dataDir=$(echo "/Volumes/KAA2025/Rep2_20250205")
-projectName=$(echo "/Users/kalexander/Documents/ilastikModels/nuclearClassification/nuclearClassificationFFPE.v2/nuclearClassificationFFPE.v2.ilp")
+projectName=$(echo "/Users/kalexander/Documents/IlastikModels/nucleiClassification/nuclearClassificationFFPEv2/nuclearClassificationFFPE.v2.ilp")
 well=$1
 
 #echo /Volumes/KAA2025/Rep1_20250129/A1/registration/o*.tiff
