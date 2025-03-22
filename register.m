@@ -9,7 +9,7 @@
 dataDir = pwd;
 %well = 'C1';
 xPixels = 5200; % images will be cropped to this # of pixels
-yPixels = 5200;
+yPixels = 5200; % images will be cropped to this # of pixels
 outDir = strcat(dataDir,"/",well,'registration/');
 disp(outDir)
 if ~exist(outDir, 'dir')
