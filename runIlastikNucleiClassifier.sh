@@ -5,7 +5,7 @@ well=$1
 #echo /Volumes/KAA2025/Rep1_20250129/A1/registration/o*.tiff
 #echo $dataDir/$well/registration/o*.tiff
 /Applications/ilastik-1.4.1rc2-arm64-OSX.app/Contents/MacOS/ilastik --headless \
---project="$dataDir/$projectName" \
+--project="$projectName" \
 --table_filename="$dataDir/"$well"exportedObjectFeatures.csv" \
 --export_source="Object Predictions" \
 --stack_along="c" \
