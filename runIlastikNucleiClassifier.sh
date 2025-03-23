@@ -1,4 +1,4 @@
-dataDir=$(echo "/Volumes/KAA2025/Rep2_20250205")
+dataDir=$(echo "/Volumes/KAA2025/Rep3_20250219")
 projectName=$(echo "/Users/kalexander/Documents/IlastikModels/nucleiClassification/nuclearClassificationFFPEv2/nuclearClassificationFFPE.v2.ilp")
 well=$1
 

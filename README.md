@@ -7,7 +7,11 @@ We generally image at 20x with the focal plane determined by DNA Hoesht signal u
 Tiles should overlap at least 10%.
 
 # Stitching
-Perform stitching within the Zeiss microscopy software.
+Perform stitching within the Zeiss microscopy software using the following settings within Parameters:
+1. Click "New Output"
+2. 5% min overlap
+3. 5% Max shift
+Ensure that DNA channel is selected.   
 
 # Needed files
 Within your data directory, you need the following files:
@@ -96,7 +100,6 @@ The following will just need to be set up before the first use:
 * ensure cyclicIF is also added to the MATLAB path and within Documents > MATLAB
 * In MATLAB, Install Image Processing Toolbox Add-Ons. From HOME window in MATLAB, click "Add-ons"
 * In "runRegistration.sh", you will need to make sure that the path to MATLAB is correct
-  
 
 ## Runing the Registration
 In terminal, navigate to the directory that has all of the sample directories. This directory should have each of the wells as a directory, with image ".czi" files stored in well/raw. This directory should also have the "markers.csv" file.
@@ -107,16 +110,35 @@ From the command line, the following will loop through each well directory to ru
 
 The above script will create a new directory in each well directory, called "registration". It will save the registered images to the registration directory with new names according the the markers file. It will also output registrationStats.csv. In our initial tests, we noted that when the DNA staining quality was poor, with low signal to noise, the peak correlation statistic was lower; however, the images were still accurately aligned. 
 
-# Segmentation
-Used [ilastik](https://www.ilastik.org/) pixel classifier to segment nuclei stain from background.
-After training the classifier, saved the results to "DNA_2_Probabilities.tiff" within each well's registration folder by using batch processing within the GUI.
-Different replicates of the same experiment should be able to use the same trained model without need for more training. 
-In ilastik, can load "FFPE_DNAclasifier_2.ilp" to call DNA stain from background. This is a pixel-based classifier. The nucleus based classification happens in the next step.
+CRITICAL STEP: Check registrationStats.csv for each well. The peak correlation should be >0.7. If it is lower, check the images in Fiji, comparing the reference DNA channel to the poorly registered cycle. Noisy images may have 0.4, but still be properly registered. Incorrect registration will be 0.3 and lower. 
 
+NOTE: Registration will fail if stitching was not optimal, or if stitching was done using different parameters for different cycles. Another reason for registration failure is poor image quality of one round.
+
+# Using Ilastik
+[Ilastik](https://www.ilastik.org/) is a machine learning tool that can be trained to recognize pixel classes and object classes from imaging data. While powerful, keep in mind that it will behave as it is trained, meaning that the amount and type of training can influence the output.
+
+To re-use the same trained model between replicates or different wells in an experiment, models should be saved locally together with the data used for training. Create the directories Documents>IlasticModels>pixelClassification and Documents>IlasticModels>nucleiClassification. This will be where trained models and training data are stored. Give each model its own directory, called the same name as the .ilp file (without ".ilp") that contains the ilastik model together with a "data" folder. The data folder will be where the training data is kept. 
+
+Best practices:
+* Train models on diverse sample types within the experiment (eg adjacent and tumor samples, Grade 1 and Grade 2 samples)
+* Include the same sample from all replicates to ensure that the model is robust across replicates
+* Ensure the training appears accurate across multiple samples
+* Use the same trained model on all the samples and replicates within an experiment
+
+
+# Segmentation
+Used [ilastik](https://www.ilastik.org/) pixel classifier to segment nuclei stain. Here, setting three labels works best: background, in between, and nucleus. The "in between" label should be drawn in between two adjoining nuclei. This assists with distinguishing clumped nuclei later. 
+After training the classifier, save the results to "DNA_2_Probabilities.tiff" within each well's registration folder by using batch processing within the GUI.
+Model used: "FFPE_DNAclasifier_2.ilp"
 
 # Nucleus classification
-In ilastik, nuclei were classified into tumor, CD31, CD4/CD8 (double positive), CD4, CD8, and alphaSMA using the below channels. 
-The trained model was saved as "objectClassificationNucleiFFPE.ilp". Then, each of the wells were processed for nuclei classification.
+In ilastik, nuclei were classified into alphaSMA, CD31+SMA+, CD31, CD4, CD4/CD8 (double positive), CD8, and epithelial using the below channels. 
+
+Notes on training:
+* Intensity and neighborhood features were used
+* The texture features make it take much longer to train and run
+
+The trained model was saved as "nuclearClassificationFFPE.v2.ilp". Then, each of the wells were processed for nuclei classification.
 
 Before processing, they needed to be renamed so that they could be called to using "o\*.tiff" within the script.
 
@@ -133,8 +155,10 @@ for dir in */; do mv "$dir"registration/SRRM2.tiff "$dir"registration/oSRRM2.tif
 
 Before running the below script in Terminal, make sure that the registration folder contains "DNA_2_Probabilities.tiff" and that each of the desired tiff files above were correctly renamed to begin with "o"
 
+Within the runIlastikNucleiClassification.sh, edit dataDir to reflect the directory that the data is in, edit projectName to reflect the full path and name of the Ilastik project.
+
 Running nuclei classifcation:
-```for dir in */; do ./runIlastikNucleiClassifier.sh $dir; done```
+```for dir in */; do /Users/kalexander/Documents/MATLAB/cyclicIF/runIlastikNucleiClassifier.sh $dir; done```
 
 The nuclei classification outputs two files per well:
 * "o_Object Predictions.tiff" within the registration folder, which contains each nucleus classifcation. 
