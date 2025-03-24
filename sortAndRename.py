@@ -5,7 +5,7 @@
 import sys, os, re
 
 def main(args):
-    if not len(args) == 2: sys.exit("USAGE: python3 sortAndRenameForMCMICRO.py wellCodes.csv")
+    if not len(args) == 2: sys.exit("USAGE: python3 sortAndRename.py wellCodes.csv")
 
     f = open(args[1])
     line = f.readline()[:-1]
