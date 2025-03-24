@@ -6,12 +6,16 @@ It uses some of the organization/structure as inspired by [McMICRO](https://mcmi
 We generally image at 20x with the focal plane determined by DNA Hoesht signal using Software Autofocus.
 Tiles should overlap at least 10%.
 
+To keep exposures more consistent between replicates, find a well to serve as a reference for each protein stain/channel. This should be a well with bright signal because we want to avoid overexposure. 
+
 # Stitching
 Perform stitching within the Zeiss microscopy software using the following settings within Parameters:
 1. Click "New Output"
-2. 5% min overlap
-3. 5% Max shift
+2. Check "Fuse tiles"
+3. 5% min overlap
+4. 5% Max shift
 Ensure that DNA channel is selected.   
+
 
 # Needed files
 Within your data directory, you need the following files:
