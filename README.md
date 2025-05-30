@@ -8,6 +8,9 @@ Tiles should overlap at least 10%.
 
 To keep exposures more consistent between replicates, find a well to serve as a reference for each protein stain/channel. This should be a well with bright signal because we want to avoid overexposure. 
 
+# Marker failure annotation
+During imaging, keep track of whether a marker failed. Create a new text document, called "failedMarkers.txt", and add failed markers to the document. 
+
 # Stitching
 Perform stitching within the Zeiss microscopy software using the following settings within Parameters:
 1. Click "New Output"
@@ -15,7 +18,6 @@ Perform stitching within the Zeiss microscopy software using the following setti
 3. 5% min overlap
 4. 5% Max shift
 Ensure that DNA channel is selected.   
-
 
 # Needed files
 Within your data directory, you need the following files:
@@ -56,34 +58,38 @@ imageNumber,well,Age,Sex,Organ/Anatomic Site,PathologyDiagnosis,TNM,Grade,Stage,
 ```
 In the above example, imaging occured as a snake, accounting for the count down then count up of wells matching the imaging number. The imaging number in wellCodes.csv should match the number present in the image file name. In addition to imageNumber and wells columns, it is useful later to have the sample information in this file. The first two columns are what's needed for sorting and renaming the files, the later columns are used after calculating per-nucleus measurements in CellProfiler.
 
+For blinded experiments, wellCodes.csv should just have the image number and well position.
+
 # Markers file
-The file, markers.csv, will encode which cycle is which marker using the "marker_name" column. For this reason, every marker_name needs to be unique.
+The file, markers.csv, will encode which cycle is which marker using the "marker_name" column. For this reason, every marker_name needs to be unique. Cycle number should be two digits, e.g. "01" instead of "1" (edit in text format rather than excel/numbers to avoid autocorrection)
 
 markers.csv file example
 ```
 channel_number,cycle_number,marker_name,filter,excitation wavelength,emission wavelength
-1,1,DNA_1,DNA_1,353,465
-2,1,A488_background,AF488,493,517
-3,1,A647_background,Cy5,650,673
-4,2,DNA_2,DNA_2,353,465
-5,2,SON,AF488,493,517
-6,2,SRRM2,Cy5,650,673
-7,3,DNA_3,DNA_3,353,465
-8,3,CD8,AF488,493,517
-9,3,CD4,AF568,577,603
-10,3,CD3D,Cy5,650,673
-11,4,DNA_4,DNA_4,353,465
-12,4,PAX8,AF488,493,517
-13,4,AlphaSMA,AF568,577,603
-14,4,CD31,Cy5,650,673
-15,5,DNA_5,DNA_5,353,465
-16,5,HCS,AF488,493,517
+1,01,DNA_1,DNA_1,353,465
+2,01,A488_background,AF488,493,517
+3,01,A647_background,Cy5,650,673
+4,02,DNA_2,DNA_2,353,465
+5,02,SON,AF488,493,517
+6,02,SRRM2,Cy5,650,673
+7,03,DNA_3,DNA_3,353,465
+8,03,CD8,AF488,493,517
+9,03,CD4,AF568,577,603
+10,03,CD3D,Cy5,650,673
+11,04,DNA_4,DNA_4,353,465
+12,04,PAX8,AF488,493,517
+13,04,AlphaSMA,AF568,577,603
+14,04,CD31,Cy5,650,673
+15,05,DNA_5,DNA_5,353,465
+16,05,HCS,AF488,493,517
 ```
 
-Also avoid spaces or special characters in the marker_name column. 
+Avoid spaces or special characters in the marker_name column. 
 
 # Rename and sort imaging files
-The following python script sorts and renames the imaging files so that each imaging sample gets its own directory, with simplified file names according to imaging cycle. Note that the Python script may need to be amended depending on the number of rounds (adding or subtracting if statments within for loop)
+The following python script sorts and renames the imaging files so that each imaging sample gets its own directory, with simplified file names according to imaging cycle. 
+
+The Python script will need to be amended depending on the number of rounds (adding or subtracting if statments within for loop)
 
 ```python3 sortAndRename.py wellCodes.csv```
 
@@ -112,57 +118,100 @@ From the command line, the following will loop through each well directory to ru
 
 ```for dir in */; do ./runRegistration.sh $dir; done```
 
-The above script will create a new directory in each well directory, called "registration". It will save the registered images to the registration directory with new names according the the markers file. It will also output registrationStats.csv. In our initial tests, we noted that when the DNA staining quality was poor, with low signal to noise, the peak correlation statistic was lower; however, the images were still accurately aligned. 
+The above script will create a new directory in each well directory, called "registration". It will save the registered images to the registration directory with new names according the the markers file.
 
-CRITICAL STEP: Check registrationStats.csv for each well. The peak correlation should be >0.7. If it is lower, check the images in Fiji, comparing the reference DNA channel to the poorly registered cycle. Noisy images may have 0.4, but still be properly registered. Incorrect registration will be 0.3 and lower. 
+## Checking the registration statistics
+The registration stats are a key indication of whether cells were lost between cycles or if there's other quality issues with a sample. The peak correlation should be >0.7. If it is lower, check the images in Fiji, comparing the reference DNA channel to the poorly registered cycle. Noisy images may have 0.4, but still be properly registered. Incorrect registration will be 0.3 and lower and should be marked for exclusion from the final analysis. 
 
-NOTE: Registration will fail if stitching was not optimal, or if stitching was done using different parameters for different cycles. Another reason for registration failure is poor image quality of one round.
+Use the Rscript, "registration_stat.R" to generate a table of registration statistics, and "registration_heatmap.R" to visualize the registration statistics.
 
-# Using Ilastik
-[Ilastik](https://www.ilastik.org/) is a machine learning tool that can be trained to recognize pixel classes and object classes from imaging data. While powerful, keep in mind that it will behave as it is trained, meaning that the amount and type of training can influence the output.
+This will help identify which wells should be excluded from future analysis. Put these wells into a new folder, called "zExcludedWells"
 
-To re-use the same trained model between replicates or different wells in an experiment, models should be saved locally together with the data used for training. Create the directories Documents>IlasticModels>pixelClassification and Documents>IlasticModels>nucleiClassification. This will be where trained models and training data are stored. Give each model its own directory, called the same name as the .ilp file (without ".ilp") that contains the ilastik model together with a "data" folder. The data folder will be where the training data is kept. 
+# Nucleus segmentation with CellPose
+Used the CellProfiler pipeline, "makeCytoplasmMask" to combine the cytoplasmic stains into one image: 
+1. Within CellProfiler, in the Images tab clear the files that are currently there, then right click and browse for folders to select to parent directory that has all of your image directories. Click on "Apply filteres to the file list" to filter the files that will be loaded. 
+2. In NamesAndTypes, make sure the desired markers are represented. Delete markers that are not used in this experiment. Click Update
+3. Click on "Analyze Images". This will create a new image within each well, called "addedCytoplasmWithDAPI2"
 
-Best practices:
-* Train models on diverse sample types within the experiment (eg adjacent and tumor samples, Grade 1 and Grade 2 samples)
-* Include the same sample from all replicates to ensure that the model is robust across replicates
-* Ensure the training appears accurate across multiple samples
-* Use the same trained model on all the samples and replicates within an experiment
+This is then used in combination with the DNA signal to detect nuclei using [CellPose](https://cellpose.readthedocs.io/en/latest/installation.html). Ensure all dependencies are met before starting. 
 
+The makeCytoplasmMask CellProfiler pipeline also outputs cropped images that can be used to train CellPose models. This part can be unchecked within CellProfiler if a model is trained already.
 
-# Segmentation
-Used [ilastik](https://www.ilastik.org/) pixel classifier to segment nuclei stain. Here, setting three labels works best: background, in between, and nucleus. The "in between" label should be drawn in between two adjoining nuclei. This assists with distinguishing clumped nuclei later. 
-After training the classifier, save the results to "DNA_2_Probabilities.tiff" within each well's registration folder by using batch processing within the GUI.
-Model used: "FFPE_DNAclasifier_2.ilp"
+I trained the model, entitled CP_FFPE_nuclei, from the cyto3 CellPose model. It works fairly well for our data and can likely be used for future segmentation without need for additional training. 
+
+To run for all the wells within a folder
+```
+for dir in */; do ./runCellpose.sh $dir; done
+```
+The path to to CellPose model will need to be specified. 
+
+The results of this script will output a file ending in "masks.tif" that contains the nucleus segmentations to be loaded into Ilastic for nucleus classification.
+
 
 # Nucleus classification
-In ilastik, nuclei were classified into alphaSMA, CD31+SMA+, CD31, CD4, CD4/CD8 (double positive), CD8, and epithelial using the below channels. 
+[Ilastik](https://www.ilastik.org/) is a machine learning tool that can be trained to recognize pixel classes and object classes from imaging data. While powerful, keep in mind that it will behave as it is trained, meaning that the amount and type of training can influence the output. Models should be saved locally together with the data used for training.
 
-Notes on training:
-* Intensity and neighborhood features were used
-* The texture features make it take much longer to train and run
+Prior to training, rename the image files to be used for classification:
+```
+for dir in */; do mv "$dir"registration/AlphaSMA.tiff "$dir"registration/oAlphaSMA.tiff; done
+for dir in */; do mv "$dir"registration/CD3D.tiff "$dir"registration/oCD3D.tiff; done
+for dir in */; do mv "$dir"registration/CD4.tiff "$dir"registration/oCD4.tiff; done
+for dir in */; do mv "$dir"registration/CD8.tiff "$dir"registration/oCD8.tiff; done
+for dir in */; do mv "$dir"registration/CD11C.tiff "$dir"registration/oCD11C.tiff; done
+for dir in */; do mv "$dir"registration/CD15.tiff "$dir"registration/oCD15.tiff; done
+for dir in */; do mv "$dir"registration/CD20.tiff "$dir"registration/oCD20.tiff; done
+for dir in */; do mv "$dir"registration/CD31.tiff "$dir"registration/oCD31.tiff; done
+for dir in */; do mv "$dir"registration/CD45.tiff "$dir"registration/oCD45.tiff; done
+for dir in */; do mv "$dir"registration/CD68.tiff "$dir"registration/oCD68.tiff; done
+for dir in */; do mv "$dir"registration/CollagenIV.tiff "$dir"registration/oCollagenIV.tiff; done
+for dir in */; do mv "$dir"registration/DNA_2.tiff "$dir"registration/oDNA_2.tiff; done
+for dir in */; do mv "$dir"registration/PanCytokeratin.tiff "$dir"registration/oPanCytokeratin.tiff; done
+for dir in */; do mv "$dir"registration/SON.tiff "$dir"registration/oSON.tiff; done
+for dir in */; do mv "$dir"registration/SRRM2.tiff "$dir"registration/oSRRM2.tiff; done
+for dir in */; do mv "$dir"registration/VIM.tiff "$dir"registration/oVIM.tiff; done
+```
+
+This makes it easier to select the images for classification.
+
+Within Ilastik
+1. Select "Object Classification [Inputs: Raw Data, Segmentation]"
+2. Add raw data by clicking, "Add New"
+    - Add single 3D/4D Volume from Sequence
+    - Choose all of the channels to be used for classification
+    - At the bottom, Stack Across C and click "Ok"
+    - Double click on the nickname to rename to the well name
+3. Within Segmentation Image tab, add the masks.tif file (Add Separate Image). Segmentation images need to be added in the same order as the Raw Data, otherwise it won't know which segmentation belongs to which images.
+4. Default feature selection
+    - The neighborhood was set to 50x50 pixels (20x objective, with 2x2 binning)
+    - The texture features make it take much longer to train and run
+
+
+## Training
+Best practices:
+* Train models on diverse sample types within the experiment (eg adjacent and tumor samples, Grade 1 and Grade 2 samples)
+* Ensure the training appears accurate across multiple samples
+
+Tips:
+* Prior to starting select sample types that have clear representations of the desired classes
+* Have a clear idea of which classes involve multiple markers before starting. For example, endothelial cells can be alone, next to SMA, or next to collagen. If you are confused when training, the model will also get confused.
+* Choose a small area and try to classify every nucleus in that area. The most common misclassifications are false positives that are next to true positives.
+* Start with "easy" classes (e.g. CD4, CD8, CD4CD8), then move on to the more complicated ones (e.g. different types of endothelial cells). 
+* Include a class, "disloged" for nuclei that are lost between cycles and missing a subset of the stains. Find a sample with mediocre registration statistics to define these.
 
 The trained model was saved as "nuclearClassificationFFPE.v2.ilp". Then, each of the wells were processed for nuclei classification.
 
-Before processing, they needed to be renamed so that they could be called to using "o\*.tiff" within the script.
+## Running the model
+Before running the below script in Terminal, make sure that the registration folder contains the masks.tif file and that each of the markers used in classification are named to begin with "o"
 
-Renaming the tiff files that are used for nuclei classification:
+Within the runIlastikNucleiClassification.sh, edit dataDir to reflect the directory that the data is in, edit projectName to reflect the full path and name of the Ilastik project. Ensure that the masks file has the correct name.
+
+Test the classification script on one well:
 ```
-for dir in */; do mv "$dir"registration/AlphaSMA.tiff "$dir"registration/oAlphaSMA.tiff; done
-for dir in */; do mv "$dir"registration/CD31.tiff "$dir"registration/oCD31.tiff; done
-for dir in */; do mv "$dir"registration/CD4.tiff "$dir"registration/oCD4.tiff; done
-for dir in */; do mv "$dir"registration/CD8.tiff "$dir"registration/oCD8.tiff; done
-for dir in */; do mv "$dir"registration/DNA_2.tiff "$dir"registration/oDNA_2.tiff; done
-for dir in */; do mv "$dir"registration/SON.tiff "$dir"registration/oSON.tiff; done
-for dir in */; do mv "$dir"registration/SRRM2.tiff "$dir"registration/oSRRM2.tiff; done
+./runIlastikNucleiClassifier.sh A3/
 ```
 
-Before running the below script in Terminal, make sure that the registration folder contains "DNA_2_Probabilities.tiff" and that each of the desired tiff files above were correctly renamed to begin with "o"
-
-Within the runIlastikNucleiClassification.sh, edit dataDir to reflect the directory that the data is in, edit projectName to reflect the full path and name of the Ilastik project.
-
-Running nuclei classifcation:
-```for dir in */; do /Users/kalexander/Documents/MATLAB/cyclicIF/runIlastikNucleiClassifier.sh $dir; done```
+Run nuclei classifcation on all wells:
+```for dir in */; do ./runIlastikNucleiClassifier.sh $dir; done```
 
 The nuclei classification outputs two files per well:
 * "o_Object Predictions.tiff" within the registration folder, which contains each nucleus classifcation. 
@@ -174,8 +223,48 @@ Used the CellProfiler pipeline, "MeasureIntensityNucleus.cpproj" to measure nucl
 This pipeline requires inputs of:
 1. "o_Object Prediction.tiff" from Nucleus Classification above
 2. "oDNA_2.tiff"
-3. "oSON.tiff"
-4. "oSRRM2.tiff"
+3. "DNA_7.tiff" - This should be the last cycle of DNA imaged. It helps confirm lost nuclei to be discared from analysis.
+4. "oSON.tiff"
+5. "oSRRM2.tiff"
+6. "Ki67.tiff" - Note that Ki67 was not used to classify objects, but is used to described proliferation state of classified objects. This is why it is included here, but not in classifications step.
+Include any other cell state markers. 
+
+From the nuclei clasifications, the "o_Object Predictions.tiff" file contains the nucleus classes, in which each nucleus gets a value according to its class.
+The values are separated by 0.004, so in the ClassifyObjects module within CellProfiler, a vector of 0.04 spaced values will tell CP which nuclei belong to which class
+The classes will be in the order that they were set as classes in Ilastik.
+
+Example with 24 classes. The vector of values is 23 in length.
+```
+0.004,0.008,0.012,0.016,0.02,0.024,0.028,0.032,0.036,0.04,0.044,0.048,0.052,0.056,0.06,0.064,0.068,0.072,0.076,0.080,0.084,0.088,0.092
+CD8,CD4CD8,CD4,CD20,CD20CD11C,CD11C,CD68,CD15CD45,CD15KRT,KRTmed,KRThigh,KRTVIM,VIM,CD31alone,CD31COLIVtight,CD31COIVloose,CD31nearSMA,SMAnearCD31,SMAalone,GlomCD31,SMAKRT,GlomVIM,CD45alone,dislodged
+```
+
+In the DisplayDataOnImage module, the Color map range will need to be adjusted depending on the number of classes.
 
 It outputs:
-1. A tiff file
+1. A tiff file called "nucleusClasses.tiff"
+2. Measurements files, the most important of which being "measurementsnuclei.csv", which contains all the measurements for all the nuclei in the experiment.  
+
+# Calculating per-sample information
+With the table, "measurmentsnuclei.csv", we now have speckle measurements, classifications, and proliferation (Ki67) measurements for each nucleus. To relate this to sample metadata, we will need to calculate per-sample values for each item of interest.
+
+For speckle measurements, we want to calculate the median for all the cells in the sample, in cancer/epithelial cells vs non-cancer, and in each cell type. For this reason, we make three files, one for each of these.
+
+For tumor microenvironment, we want to calculate per-sample amounts of each cell type. This is simple, we just add.
+
+The script, "process.R", calculates all this and outputs four files into the directory, "wellLevelProcessedData":
+1. nucleiCounts.csv - a counts table of the number of nuclei in each class for each sample.
+2. median_totals.csv - medians for all quantitative measurements. Median calcualted for all cell types regardless of classification 
+3. median_cancerNonCancer.csv - medians as above, but each sample has the median for the non-cancer and cancer/epithelial cell types calculated.
+4. median_per_cellType.csv - medians as above, but each sample has the median calculated for each cell type.
+
+To start, process.R does some quality control to exclude tiny and huge nuclei, nuclei that are strangely shaped, and nuclei classified as dislodged. These settings need to be double checked in each experiment.
+
+Under the section "OUTPUT TABLE OF MEDIAN VALUES PER WELL", the exact classifications that define cancer/epithelial cell types will need to be checked and updated if needed. 
+
+# Relate to sample metadata
+With per-sample measurements in hand, we are ready to make graphs! The types of graphs generated depend on the questions to be addressed. In general, we want to have graphs that are sanity checks for our experiment behaving how we expect and graphs that quantify key hypotheses/findings. 
+
+The key variable for defining speckle states is the fraction of SON speckle signal in the center of the nucleus, called "RadialDistribution_FracAtD_SONenhanced_1of4". 
+
+
