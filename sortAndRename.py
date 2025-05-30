@@ -33,6 +33,10 @@ def main(args):
                 newName = well + "_cycle-04.czi"
             if "Round5" in file:
                 newName = well + "_cycle-05.czi"
+            if "Round6" in file:
+                newName = well + "_cycle-06.czi"
+            if "Round7" in file:
+                newName = well + "_cycle-07.czi"
             cmd = 'mv "' + file + '" ' + well + '/raw/' + newName
             os.system(cmd)
         line = f.readline()[:-1]
