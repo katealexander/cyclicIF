@@ -131,13 +131,13 @@ This will help identify which wells should be excluded from future analysis. Put
 Used the CellProfiler pipeline, "makeCytoplasmMask" to combine the cytoplasmic stains into one image: 
 1. Within CellProfiler, in the Images tab clear the files that are currently there, then right click and browse for folders to select to parent directory that has all of your image directories. Click on "Apply filteres to the file list" to filter the files that will be loaded. 
 2. In NamesAndTypes, make sure the desired markers are represented. Delete markers that are not used in this experiment. Click Update
-3. Click on "Analyze Images". This will create a new image within each well, called "addedCytoplasmWithDAPI2"
+3. Click on "Analyze Images". This will create a new image within each well, called "addedCytoplasmWithDAPI7"
 
 This is then used in combination with the DNA signal to detect nuclei using [CellPose](https://cellpose.readthedocs.io/en/latest/installation.html). Ensure all dependencies are met before starting. 
 
 The makeCytoplasmMask CellProfiler pipeline also outputs cropped images that can be used to train CellPose models. This part can be unchecked within CellProfiler if a model is trained already.
 
-I trained the model, entitled CP_FFPE_nuclei, from the cyto3 CellPose model. It works fairly well for our data and can likely be used for future segmentation without need for additional training. 
+I trained the model, entitled CP_FFPE_nuclei9, from the cyto3 CellPose model. It works fairly well for our data and can likely be used for future segmentation without need for additional training. 
 
 To run for all the wells within a folder
 ```
@@ -151,28 +151,12 @@ The results of this script will output a file ending in "masks.tif" that contain
 # Nucleus classification
 [Ilastik](https://www.ilastik.org/) is a machine learning tool that can be trained to recognize pixel classes and object classes from imaging data. While powerful, keep in mind that it will behave as it is trained, meaning that the amount and type of training can influence the output. Models should be saved locally together with the data used for training.
 
-Prior to training, rename the image files to be used for classification:
-```
-for dir in */; do mv "$dir"registration/AlphaSMA.tiff "$dir"registration/oAlphaSMA.tiff; done
-for dir in */; do mv "$dir"registration/CD3D.tiff "$dir"registration/oCD3D.tiff; done
-for dir in */; do mv "$dir"registration/CD4.tiff "$dir"registration/oCD4.tiff; done
-for dir in */; do mv "$dir"registration/CD8.tiff "$dir"registration/oCD8.tiff; done
-for dir in */; do mv "$dir"registration/CD11C.tiff "$dir"registration/oCD11C.tiff; done
-for dir in */; do mv "$dir"registration/CD15.tiff "$dir"registration/oCD15.tiff; done
-for dir in */; do mv "$dir"registration/CD20.tiff "$dir"registration/oCD20.tiff; done
-for dir in */; do mv "$dir"registration/CD31.tiff "$dir"registration/oCD31.tiff; done
-for dir in */; do mv "$dir"registration/CD45.tiff "$dir"registration/oCD45.tiff; done
-for dir in */; do mv "$dir"registration/CD68.tiff "$dir"registration/oCD68.tiff; done
-for dir in */; do mv "$dir"registration/CollagenIV.tiff "$dir"registration/oCollagenIV.tiff; done
-for dir in */; do mv "$dir"registration/DNA_2.tiff "$dir"registration/oDNA_2.tiff; done
-for dir in */; do mv "$dir"registration/PanCytokeratin.tiff "$dir"registration/oPanCytokeratin.tiff; done
-for dir in */; do mv "$dir"registration/SON.tiff "$dir"registration/oSON.tiff; done
-for dir in */; do mv "$dir"registration/SRRM2.tiff "$dir"registration/oSRRM2.tiff; done
-for dir in */; do mv "$dir"registration/VIM.tiff "$dir"registration/oVIM.tiff; done
-```
 
-This makes it easier to select the images for classification.
 
+## Cropping before classifying
+It is easier to train Ilastik models on cropped images. This makes things run faster and involves less zooming in and out. The cellProfiler pipeline, "cropForClassification.cpproj" crops images to be used for classification. Within the project, you will need to modify the location images are saved in the "SaveImages" modules.
+
+## Classifying nuclei
 Within Ilastik
 1. Select "Object Classification [Inputs: Raw Data, Segmentation]"
 2. Add raw data by clicking, "Add New"
@@ -196,12 +180,34 @@ Tips:
 * Have a clear idea of which classes involve multiple markers before starting. For example, endothelial cells can be alone, next to SMA, or next to collagen. If you are confused when training, the model will also get confused.
 * Choose a small area and try to classify every nucleus in that area. The most common misclassifications are false positives that are next to true positives.
 * Start with "easy" classes (e.g. CD4, CD8, CD4CD8), then move on to the more complicated ones (e.g. different types of endothelial cells). 
-* Include a class, "disloged" for nuclei that are lost between cycles and missing a subset of the stains. Find a sample with mediocre registration statistics to define these.
+* When training on cropped images, do not include cropped nuclei as nuclei that are classified (don't click on the partial nuclei)
 
 The trained model was saved as "nuclearClassificationFFPE.v2.ilp". Then, each of the wells were processed for nuclei classification.
 
+## Renaming the files
+Prior to running the classification, rename the files so that the files to be used in classification all start with the same letter. This will be used to tell Ilastik which files to use.
+```
+for dir in */; do mv "$dir"registration/AlphaSMA.tiff "$dir"registration/ozAlphaSMA.tiff; done
+for dir in */; do mv "$dir"registration/CD3D.tiff "$dir"registration/oCD3D.tiff; done
+for dir in */; do mv "$dir"registration/CD4.tiff "$dir"registration/oCD4.tiff; done
+for dir in */; do mv "$dir"registration/CD8.tiff "$dir"registration/oCD8.tiff; done
+for dir in */; do mv "$dir"registration/CD11C.tiff "$dir"registration/oCD11C.tiff; done
+for dir in */; do mv "$dir"registration/CD15.tiff "$dir"registration/oCD15.tiff; done
+for dir in */; do mv "$dir"registration/CD20.tiff "$dir"registration/oCD20.tiff; done
+for dir in */; do mv "$dir"registration/CD31.tiff "$dir"registration/oCD31.tiff; done
+for dir in */; do mv "$dir"registration/CD45.tiff "$dir"registration/oCD45.tiff; done
+for dir in */; do mv "$dir"registration/CD68.tiff "$dir"registration/oCD68.tiff; done
+for dir in */; do mv "$dir"registration/CollagenIV.tiff "$dir"registration/oCollagenIV.tiff; done
+for dir in */; do mv "$dir"registration/DNA_2.tiff "$dir"registration/oDNA_2.tiff; done
+for dir in */; do mv "$dir"registration/PanCytokeratin.tiff "$dir"registration/oPanCytokeratin.tiff; done
+for dir in */; do mv "$dir"registration/SON.tiff "$dir"registration/oSON.tiff; done
+for dir in */; do mv "$dir"registration/SRRM2.tiff "$dir"registration/oSRRM2.tiff; done
+for dir in */; do mv "$dir"registration/VIM.tiff "$dir"registration/oVIM.tiff; done
+```
+IMPORTANT: the order of the channels alphabetically needs to match the order used for classification training. In this example, AlphaSMA was the last channel in classification training, so a "z" was added to ensure the order was correct.
+
 ## Running the model
-Before running the below script in Terminal, make sure that the registration folder contains the masks.tif file and that each of the markers used in classification are named to begin with "o"
+Before running the below script in Terminal, make sure that the registration folder contains the masks.tif file, that each of the markers used in classification are named to begin with "o", and that no other images in the folder start with an "o".
 
 Within the runIlastikNucleiClassification.sh, edit dataDir to reflect the directory that the data is in, edit projectName to reflect the full path and name of the Ilastik project. Ensure that the masks file has the correct name.
 
@@ -222,11 +228,10 @@ Used the CellProfiler pipeline, "MeasureIntensityNucleus.cpproj" to measure nucl
 
 This pipeline requires inputs of:
 1. "o_Object Prediction.tiff" from Nucleus Classification above
-2. "oDNA_2.tiff"
-3. "DNA_7.tiff" - This should be the last cycle of DNA imaged. It helps confirm lost nuclei to be discared from analysis.
-4. "oSON.tiff"
-5. "oSRRM2.tiff"
-6. "Ki67.tiff" - Note that Ki67 was not used to classify objects, but is used to described proliferation state of classified objects. This is why it is included here, but not in classifications step.
+2. "oDNA_7.tiff"
+3. "oSON.tiff"
+4. "oSRRM2.tiff"
+5. "Ki67.tiff" - Note that Ki67 was not used to classify objects, but is used to described proliferation state of classified objects. This is why it is included here, but not in classifications step.
 Include any other cell state markers. 
 
 From the nuclei clasifications, the "o_Object Predictions.tiff" file contains the nucleus classes, in which each nucleus gets a value according to its class.
@@ -244,6 +249,9 @@ In the DisplayDataOnImage module, the Color map range will need to be adjusted d
 It outputs:
 1. A tiff file called "nucleusClasses.tiff"
 2. Measurements files, the most important of which being "measurementsnuclei.csv", which contains all the measurements for all the nuclei in the experiment.  
+3. A tiff file called "\_fractAD1of4.tiff", which is the radial distribution of SON
+4. Tiff files called "DAPI_notSegmented.tiff" and "DAPI_segmented.tiff". These files are the DAPI signal detected within segmented nuclei and detected outside of segmented nuclei. Open these together in Fiji to get an impression of how well the detection of nuclei worked. If there are many in focus nuclei in "DAPI_notSegmented.tiff", this is a sign that nuclei are being missed in the CellPose step.
+5. Tiff files called "CD31_DAPI.tiff" and "EPIMES_DAPI.tiff". These are the DAPI signal from nuclei classified as CD31+ or ask KRT, VIM, or KRTVIM+. These images can be overlayed with CD31 in Fiji to get an impression of how the classification looks visually. CD31_DAPI nuclei should overlap with the CD31 signal within the tissue. If they do not, something went wrong in the classification.
 
 # Calculating per-sample information
 With the table, "measurmentsnuclei.csv", we now have speckle measurements, classifications, and proliferation (Ki67) measurements for each nucleus. To relate this to sample metadata, we will need to calculate per-sample values for each item of interest.

@@ -1,8 +1,7 @@
-dataDir=$(echo "/Volumes/KAA2025/Rep3_20250219")
-projectName=$(echo "/Users/kalexander/Documents/IlastikModels/nucleiClassification/nuclearClassificationFFPEv2/nuclearClassificationFFPE.v2.ilp")
+dataDir=$(pwd)
+projectName=$(echo "/Users/kalexander/Documents/MATLAB/cyclicIF/classifyNuclei.v8.ilp")
 well=$1
 
-#echo /Volumes/KAA2025/Rep1_20250129/A1/registration/o*.tiff
 #echo $dataDir/$well/registration/o*.tiff
 /Applications/ilastik-1.4.1rc2-arm64-OSX.app/Contents/MacOS/ilastik --headless \
 --project="$projectName" \
@@ -10,4 +9,4 @@ well=$1
 --export_source="Object Predictions" \
 --stack_along="c" \
 "$dataDir/"$well"registration/o*.tiff" \
---prediction_maps "$dataDir/"$well"registration/DNA_2_Probabilities.tiff"
+--segmentation_image "$dataDir/"$well"registration/addedCytoplasmWithDAPI7masks.tif"
